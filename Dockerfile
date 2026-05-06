@@ -1,23 +1,33 @@
-# Use Node.js 16 slim as the base image
-FROM node:16-slim
+FROM node:19-alpine AS sahithi
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
+# Copy package files
 COPY package*.json ./
 
 # Install dependencies
+
 RUN npm install
 
-# Copy the rest of the application code
+# Copy source code
 COPY . .
 
-# Build the React app
+# Build app
 RUN npm run build
 
-# Expose port 3000 (or the port your app is configured to listen on)
+# Expose port
 EXPOSE 3000
 
-# Start your Node.js server (assuming it serves the React app)
+FROM node:19-alpine AS final
+
+WORKDIR /app
+
+# Copy built application from previous stage
+COPY --from=sahithi /app .
+
+# Install only production dependencies
+RUN npm install --production
+
+# Start application
 CMD ["npm", "start"]
